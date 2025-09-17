@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <LangVersion>11</LangVersion>
+    <EnableLLVM>false</EnableLLVM>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
+    <NoWarn>$(NoWarn);XA4218</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Miyu.UI\Miyu.UI.csproj"/>
+    <ProjectReference Include="Library\Framework\osu.Framework.Android\osu.Framework.Android.csproj"/>
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.30"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Remove="lib\arm64-v8a\libveldrid-spirv.so"/>
+  </ItemGroup>
+
+</Project>

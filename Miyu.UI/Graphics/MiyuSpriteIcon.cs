@@ -1,0 +1,14 @@
+﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
+// See the LICENCE file in the repository root for full licence text.
+
+using osu.Framework.Graphics.Sprites;
+
+namespace Miyu.UI.Graphics;
+
+public partial class MiyuSpriteIcon : SpriteIcon
+{
+    public MiyuSpriteIcon()
+    {
+        Colour = Catppuccin.Current.Text;
+    }
+}

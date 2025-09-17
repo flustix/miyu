@@ -1,0 +1,13 @@
+.idea
+.vscode
+
+token.txt
+token_bot.txt
+gateway_error.json
+
+bin/
+obj/
+Miyu.sln.DotSettings.user
+
+Miyu.Tests/events/
+Miyu.Tests/logs/

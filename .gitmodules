@@ -1,0 +1,6 @@
+[submodule "Library/Midori"]
+	path = Library/Midori
+	url = https://github.com/flustix/Midori
+[submodule "Library/Framework"]
+	path = Library/Framework
+	url = https://github.com/InventiveRhythm/osu-framework
