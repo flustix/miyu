@@ -2,7 +2,6 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using Miyu.Models.Channels.Messages;
-using Miyu.Models.Guilds.Members;
 using Miyu.UI.Graphics;
 using Miyu.UI.Screens.Main.Pages.Channel;
 using Miyu.Utils.Extensions;
@@ -18,12 +17,10 @@ namespace Miyu.UI.Components.Messages;
 public partial class ChatMessage : ChatMessageBase
 {
     public override DiscordMessage Message { get; }
-    private DiscordMember? member { get; }
 
-    public ChatMessage(DiscordMessage message, DiscordMember? member = null)
+    public ChatMessage(DiscordMessage message)
     {
         Message = message;
-        this.member = member;
     }
 
     [BackgroundDependencyLoader]
@@ -85,6 +82,7 @@ public partial class ChatMessage : ChatMessageBase
 
     private IEnumerable<Drawable> createContent()
     {
+        var member = Guild?.MemberCache.Find(Message.Author.ID);
         var role = member?.GetTopRoleWithColor();
         var color = Catppuccin.Current.Text;
 
@@ -126,7 +124,7 @@ public partial class ChatMessage : ChatMessageBase
         };
 
         if (!string.IsNullOrEmpty(Message.Content))
-            yield return new ChatMessageContent(Client, Message.Content);
+            yield return new ChatMessageContent(Message.Content);
 
         if (Message.Attachments.Any())
             yield return new MessageAttachments(Message.Attachments);
@@ -137,6 +135,18 @@ public partial class ChatMessage : ChatMessageBase
 
     private Drawable createReference(DiscordMessage message)
     {
+        var member = Guild?.MemberCache.Find(message.Author.ID);
+        var name = member?.Nickname ?? message.Author.DisplayName ?? message.Author.Username;
+
+        var role = member?.GetTopRoleWithColor();
+        var color = Catppuccin.Current.Text;
+
+        if (role?.Color != null)
+        {
+            var hex = role.Color.ToString("X6");
+            color = Colour4.FromHex(hex);
+        }
+
         var flow = new FillFlowContainer
         {
             RelativeSizeAxes = Axes.Both,
@@ -160,11 +170,12 @@ public partial class ChatMessage : ChatMessageBase
                 },
                 new MiyuText
                 {
-                    Text = message.Author.DisplayName ?? message.Author.Username,
+                    Text = name,
                     Weight = FontWeight.Medium,
                     Anchor = Anchor.CentreLeft,
                     Origin = Anchor.CentreLeft,
                     Margin = new MarginPadding { Right = 4 },
+                    Colour = color,
                     FontSize = 14
                 },
                 new MiyuText

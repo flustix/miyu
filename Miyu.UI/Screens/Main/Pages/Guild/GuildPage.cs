@@ -36,6 +36,7 @@ public partial class GuildPage : Page
         Guild.SubscribeToEvents().Wait();
 
         dependencies.CacheAs(this);
+        dependencies.CacheAs(Guild);
         dependencies.CacheAs(subpage = new PageController());
 
         InternalChildren = new Drawable[]

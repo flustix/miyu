@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using Miyu.Models.Channels.Messages;
+using Miyu.Models.Guilds;
 using Miyu.UI.Graphics;
 using Miyu.UI.Graphics.Menus.Items;
 using osu.Framework.Allocation;
@@ -36,6 +37,9 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
 
     [Resolved]
     protected MiyuClient Client { get; private set; } = null!;
+
+    [Resolved]
+    protected DiscordGuild? Guild { get; private set; }
 
     [Resolved]
     private Clipboard clipboard { get; set; } = null!;

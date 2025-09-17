@@ -122,9 +122,7 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
     }
 
     protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)
-    {
-        return dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
-    }
+        => dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
 
     public bool OnPressed(KeyBindingPressEvent<MiyuBind> e)
     {

@@ -8,7 +8,6 @@ using Miyu.Events.Messages;
 using Miyu.Models.Channels;
 using Miyu.Models.Channels.Messages;
 using Miyu.Models.Guilds;
-using Miyu.Models.Guilds.Members;
 using Miyu.UI.Components.Messages;
 using Miyu.UI.Components.Overlays;
 using Miyu.UI.Components.Pages;
@@ -42,7 +41,7 @@ public partial class ChannelPage : Page
     private ChannelTextBox textBox = null!;
 
     private bool loading = true;
-    private readonly List<(DiscordMessage, DiscordMember?)> queue = new();
+    private readonly List<DiscordMessage> queue = new();
 
     private double lastTyping;
     private int characterCount;
@@ -175,13 +174,13 @@ public partial class ChannelPage : Page
         Channel.GetMessages().ContinueWith(task => ScheduleAfterChildren(() =>
         {
             var messages = task.Result.ToList();
-            queue.AddRange(messages.Select(message => (x: message, message.Member)));
-            queue.Sort((a, b) => a.Item1.Timestamp.CompareTo(b.Item1.Timestamp));
+            queue.AddRange(messages);
+            queue.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
 
             loading = false;
 
-            foreach (var (message, member) in queue)
-                createMessage(message, member);
+            foreach (var message in queue)
+                createMessage(message);
         }));
     }
 
@@ -243,14 +242,14 @@ public partial class ChannelPage : Page
         if (ev.Channel.ID != Channel.ID)
             return;
 
-        createMessage(ev.Message, ev.Member);
+        createMessage(ev.Message);
     }
 
-    private void createMessage(DiscordMessage message, DiscordMember? member)
+    private void createMessage(DiscordMessage message)
     {
         if (loading)
         {
-            queue.Add((message, member));
+            queue.Add(message);
             return;
         }
 
@@ -269,7 +268,7 @@ public partial class ChannelPage : Page
                 if (message.ReferencedMessage == null && last != null && message.Timestamp - last.Message.Timestamp <= TimeSpan.FromMinutes(5) && last.Message.Author.ID == message.Author.ID)
                     msg = new SmallChatMessage(message);
                 else
-                    msg = new ChatMessage(message, member);
+                    msg = new ChatMessage(message);
 
                 break;
         }

@@ -1,8 +1,11 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using Miyu.Models.Guilds;
 using Miyu.UI.Components.Messages.Content;
 using Miyu.UI.Graphics;
+using Miyu.Utils.Extensions;
+using osu.Framework.Allocation;
 using osu.Framework.Extensions;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Graphics;
@@ -13,7 +16,15 @@ namespace Miyu.UI.Components.Messages;
 
 public partial class ChatMessageContent : MiyuTextFlow
 {
-    public ChatMessageContent(MiyuClient client, string text)
+    private readonly string text;
+
+    public ChatMessageContent(string text)
+    {
+        this.text = text;
+    }
+
+    [BackgroundDependencyLoader]
+    private void load(MiyuClient client, DiscordGuild? guild)
     {
         RelativeSizeAxes = Axes.X;
         AutoSizeAxes = Axes.Y;
@@ -44,7 +55,18 @@ public partial class ChatMessageContent : MiyuTextFlow
 
                 case ContentParts.UserMention um:
                     var user = client.Users.Find(um.ID);
-                    var name = user?.DisplayName ?? user?.Username ?? um.ToString();
+                    var member = guild?.MemberCache.Find(um.ID);
+
+                    var name = member?.Nickname ?? user?.DisplayName ?? user?.Username ?? um.ID.ToString();
+                    var color = Catppuccin.Current.Blue;
+
+                    var role = member?.GetTopRoleWithColor();
+
+                    if (role != null)
+                    {
+                        var hex = role.Color.ToString("X6");
+                        color = Colour4.FromHex(hex);
+                    }
 
                     AddPart(new TextPartManual(new Container()
                     {
@@ -56,14 +78,14 @@ public partial class ChatMessageContent : MiyuTextFlow
                             new Box
                             {
                                 RelativeSizeAxes = Axes.Both,
-                                Colour = Catppuccin.Current.Blue,
+                                Colour = color,
                                 Alpha = 0.3f
                             },
                             new MiyuText
                             {
                                 Text = $"@{name}",
                                 Weight = FontWeight.Medium,
-                                Colour = Catppuccin.Current.Blue,
+                                Colour = color,
                                 Margin = new MarginPadding { Horizontal = 2 }
                             }
                         }
