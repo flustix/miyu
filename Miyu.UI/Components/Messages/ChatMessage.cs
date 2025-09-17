@@ -126,7 +126,7 @@ public partial class ChatMessage : ChatMessageBase
         };
 
         if (!string.IsNullOrEmpty(Message.Content))
-            yield return new ChatMessageContent(Message.Content);
+            yield return new ChatMessageContent(Client, Message.Content);
 
         if (Message.Attachments.Any())
             yield return new MessageAttachments(Message.Attachments);

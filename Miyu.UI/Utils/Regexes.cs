@@ -9,4 +9,7 @@ public static partial class Regexes
 {
     [GeneratedRegex(@"(<a?):\w+:(\d+>)")]
     public static partial Regex CustomEmote();
+
+    [GeneratedRegex(@"(<@)(\d+>)")]
+    public static partial Regex UserMention();
 }
