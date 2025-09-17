@@ -68,6 +68,8 @@ public partial class MiyuApp : Game
             BeforeHandle = (m, a) => Schedule(() => a(m))
         });
 
+        dependencies.CacheAs(new CachedTextureLoader(Host.Renderer, new CachedImageStore(Host.CacheStorage)));
+
         var overlays = new OverlayManager();
         dependencies.CacheAs(overlays);
 

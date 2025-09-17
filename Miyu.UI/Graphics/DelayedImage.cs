@@ -5,7 +5,6 @@ using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Sprites;
-using osu.Framework.Graphics.Textures;
 
 namespace Miyu.UI.Graphics;
 
@@ -30,7 +29,7 @@ public partial class DelayedImage : DelayedLoadUnloadWrapper
         }
 
         [BackgroundDependencyLoader]
-        private void load(TextureStore textures)
+        private void load(CachedTextureLoader cache)
         {
             RelativeSizeAxes = Axes.Both;
             FillMode = FillMode.Fill;
@@ -39,7 +38,7 @@ public partial class DelayedImage : DelayedLoadUnloadWrapper
 
             try
             {
-                Texture = textures.Get(path);
+                Texture = cache.Get(path);
             }
             catch
             {
