@@ -12,13 +12,15 @@ namespace Miyu.UI.Screens.Main.User;
 
 public partial class UserArea : CompositeDrawable
 {
+    public const float PADDING = 8;
+
     [BackgroundDependencyLoader]
     private void load(MiyuClient client)
     {
         Width = 360;
         AutoSizeAxes = Axes.Y;
         Anchor = Origin = Anchor.BottomLeft;
-        Padding = new MarginPadding(8);
+        Padding = new MarginPadding(PADDING);
 
         InternalChild = new Container
         {

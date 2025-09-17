@@ -4,6 +4,7 @@
 using Miyu.Models.Guilds;
 using Miyu.UI.Components.Channels;
 using Miyu.UI.Components.Pages;
+using Miyu.UI.Screens.Main.User;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
@@ -14,6 +15,9 @@ namespace Miyu.UI.Screens.Main.Pages.Guild;
 
 public partial class GuildPage : Page
 {
+    [Resolved]
+    private AppScreen app { get; set; } = null!;
+
     public DiscordGuild Guild { get; }
 
     private DependencyContainer dependencies = null!;
@@ -58,17 +62,29 @@ public partial class GuildPage : Page
                 {
                     new Drawable[]
                     {
-                        channelListWrap = new Container
+                        new Container
                         {
-                            Width = list_width,
+                            AutoSizeAxes = Axes.X,
                             RelativeSizeAxes = Axes.Y,
-                            Masking = true,
-                            Child = new ChannelList(Guild)
+                            Children = new Drawable[]
                             {
-                                Width = list_width,
-                                RelativeSizeAxes = Axes.Y,
-                                Anchor = Anchor.CentreRight,
-                                Origin = Anchor.CentreRight
+                                new Box
+                                {
+                                    RelativeSizeAxes = Axes.Both,
+                                    Colour = Catppuccin.Current.Mantle
+                                },
+                                channelListWrap = new Container
+                                {
+                                    Width = list_width,
+                                    Masking = true,
+                                    Child = new ChannelList(Guild)
+                                    {
+                                        Width = list_width,
+                                        RelativeSizeAxes = Axes.Y,
+                                        Anchor = Anchor.CentreRight,
+                                        Origin = Anchor.CentreRight
+                                    }
+                                },
                             }
                         },
                         subpage
@@ -84,8 +100,13 @@ public partial class GuildPage : Page
         leftSideVisible.BindValueChanged(v => channelListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, 300, Easing.OutQuint), true);
     }
 
-    protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)
+    protected override void Update()
     {
-        return dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
+        base.Update();
+
+        channelListWrap.Height = DrawHeight - app.UserAreaHeight + UserArea.PADDING;
     }
+
+    protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)
+        => dependencies = new DependencyContainer(base.CreateChildDependencies(parent));
 }

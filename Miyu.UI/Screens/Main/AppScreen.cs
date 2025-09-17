@@ -31,14 +31,16 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
     private DependencyContainer dependencies = null!;
 
     private const float list_width = 72;
-    private Container guildListWrap = null!;
-    private UserArea user = null!;
+    private Container? guildListWrap;
+    private UserArea? user;
 
     private readonly BindableBool leftSideVisible = new(true);
     private readonly BindableBool rightSideVisible = new(true);
 
     public Bindable<bool> LeftSideVisible => leftSideVisible.GetBoundCopy();
     public Bindable<bool> RightSideVisible => rightSideVisible.GetBoundCopy();
+
+    public float UserAreaHeight => user?.DrawHeight ?? 0;
 
     [BackgroundDependencyLoader]
     private void load(ClientConfig config)
@@ -52,6 +54,8 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
 
         leftSideVisible.BindValueChanged(v =>
         {
+            if (guildListWrap is null || user is null) return;
+
             guildListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, 300, Easing.OutQuint);
             user.MoveToX(v.NewValue ? 0 : -user.DrawWidth, 300, Easing.OutQuint);
         });
@@ -93,7 +97,6 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
                         guildListWrap = new Container
                         {
                             Width = list_width,
-                            RelativeSizeAxes = Axes.Y,
                             Child = new GuildList
                             {
                                 Width = list_width,
@@ -108,6 +111,16 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
             },
             user
         };
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (guildListWrap is null || user is null)
+            return;
+
+        guildListWrap.Height = DrawHeight - UserAreaHeight;
     }
 
     [EventListener(EventType.Ready)]
