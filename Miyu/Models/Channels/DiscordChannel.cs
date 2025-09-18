@@ -57,6 +57,8 @@ public class DiscordChannel : Snowflake
 
         foreach (var message in messages)
         {
+            message.Author = Client.Users.AddOrUpdate(message.Author);
+
             var guild = Client.Guilds.Find(GuildID.Value) ?? throw new InvalidOperationException("Received a message from a guild not in cache.");
             var member = guild.MemberCache.Find(message.Author.ID);
 

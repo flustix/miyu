@@ -21,6 +21,7 @@ internal class MessageCreateHandler : SocketEventHandler
     internal override void Handle(JObject data)
     {
         var message = data.TurnTo<DiscordMessage>();
+        message.Author = Client.Users.AddOrUpdate(message.Author);
 
         var channel = Client.Channels.Find(message.ChannelID) ?? throw new InvalidOperationException("Could not find the associated channel for this message.");
         DiscordGuild? guild = null;

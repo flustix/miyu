@@ -38,6 +38,7 @@ public class SnowflakeCache<T>
         }
 
         copyChanges(item, existing);
+        existing.TriggerUpdate();
         return existing;
     }
 

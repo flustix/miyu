@@ -17,4 +17,11 @@ public class Snowflake
 
     [JsonIgnore]
     internal MiyuClient Client { get; set; } = null!;
+
+    public event Action? OnUpdate;
+
+    internal void TriggerUpdate()
+    {
+        OnUpdate?.Invoke();
+    }
 }

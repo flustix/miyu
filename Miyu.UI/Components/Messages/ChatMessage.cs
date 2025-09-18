@@ -18,6 +18,8 @@ public partial class ChatMessage : ChatMessageBase
 {
     public override DiscordMessage Message { get; }
 
+    private MiyuText name = null!;
+
     public ChatMessage(DiscordMessage message)
     {
         Message = message;
@@ -80,7 +82,19 @@ public partial class ChatMessage : ChatMessageBase
         }).ToArray();
     }
 
-    private IEnumerable<Drawable> createContent()
+    protected override void LoadComplete()
+    {
+        base.LoadComplete();
+        Message.Author.OnUpdate += authorUpdated;
+    }
+
+    protected override void Dispose(bool isDisposing)
+    {
+        Message.Author.OnUpdate -= authorUpdated;
+        base.Dispose(isDisposing);
+    }
+
+    private void authorUpdated()
     {
         var member = Guild?.MemberCache.Find(Message.Author.ID);
         var role = member?.GetTopRoleWithColor();
@@ -92,6 +106,12 @@ public partial class ChatMessage : ChatMessageBase
             color = Colour4.FromHex(hex);
         }
 
+        name.Text = member?.Nickname ?? Message.Author.DisplayName ?? Message.Author.Username;
+        name.Colour = color;
+    }
+
+    private IEnumerable<Drawable> createContent()
+    {
         if (Message.ReferencedMessage != null)
             yield return createReference(Message.ReferencedMessage);
 
@@ -102,13 +122,11 @@ public partial class ChatMessage : ChatMessageBase
             Direction = FillDirection.Horizontal,
             Children = new Drawable[]
             {
-                new MiyuText
+                name = new MiyuText
                 {
-                    Text = member?.Nickname ?? Message.Author.DisplayName ?? Message.Author.Username,
                     Anchor = Anchor.CentreLeft,
                     Origin = Anchor.CentreLeft,
-                    Weight = FontWeight.Medium,
-                    Colour = color
+                    Weight = FontWeight.Medium
                 },
                 new MiyuText
                 {
@@ -123,6 +141,8 @@ public partial class ChatMessage : ChatMessageBase
             }
         };
 
+        authorUpdated();
+
         if (!string.IsNullOrEmpty(Message.Content))
             yield return new ChatMessageContent(Message.Content);
 
@@ -136,7 +156,7 @@ public partial class ChatMessage : ChatMessageBase
     private Drawable createReference(DiscordMessage message)
     {
         var member = Guild?.MemberCache.Find(message.Author.ID);
-        var name = member?.Nickname ?? message.Author.DisplayName ?? message.Author.Username;
+        var refName = member?.Nickname ?? message.Author.DisplayName ?? message.Author.Username;
 
         var role = member?.GetTopRoleWithColor();
         var color = Catppuccin.Current.Text;
@@ -170,7 +190,7 @@ public partial class ChatMessage : ChatMessageBase
                 },
                 new MiyuText
                 {
-                    Text = name,
+                    Text = refName,
                     Weight = FontWeight.Medium,
                     Anchor = Anchor.CentreLeft,
                     Origin = Anchor.CentreLeft,
