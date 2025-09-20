@@ -25,4 +25,10 @@ public static class DiscordUserExtensions
         var roles = member.GetRolesSorted();
         return roles.FirstOrDefault(x => x.Color != 0);
     }
+
+    public static DiscordRole? GetTopRoleWithIcon(this DiscordMember member)
+    {
+        var roles = member.GetRolesSorted();
+        return roles.FirstOrDefault(x => x.Icon != null);
+    }
 }

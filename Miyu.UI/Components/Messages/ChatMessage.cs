@@ -19,6 +19,7 @@ public partial class ChatMessage : ChatMessageBase
     public override DiscordMessage Message { get; }
 
     private MiyuText name = null!;
+    private Container roleIconWrapper = null!;
 
     public ChatMessage(DiscordMessage message)
     {
@@ -108,6 +109,20 @@ public partial class ChatMessage : ChatMessageBase
 
         name.Text = member?.Nickname ?? Message.Author.DisplayName ?? Message.Author.Username;
         name.Colour = color;
+
+        roleIconWrapper.Clear();
+        roleIconWrapper.Alpha = 0;
+
+        var roleWithIcon = member?.GetTopRoleWithIcon();
+
+        if (roleWithIcon?.Icon != null)
+        {
+            roleIconWrapper.Alpha = 1;
+            roleIconWrapper.Child = new DelayedImage($"https://cdn.discordapp.com/role-icons/{roleWithIcon.ID}/{roleWithIcon.Icon}.png?size=24&quality=lossless")
+            {
+                RelativeSizeAxes = Axes.Both
+            };
+        }
     }
 
     private IEnumerable<Drawable> createContent()
@@ -127,6 +142,14 @@ public partial class ChatMessage : ChatMessageBase
                     Anchor = Anchor.CentreLeft,
                     Origin = Anchor.CentreLeft,
                     Weight = FontWeight.Medium
+                },
+                roleIconWrapper = new Container
+                {
+                    Size = new Vector2(20),
+                    Anchor = Anchor.CentreLeft,
+                    Origin = Anchor.CentreLeft,
+                    Margin = new MarginPadding { Left = 4 },
+                    Alpha = 0
                 },
                 new MiyuText
                 {

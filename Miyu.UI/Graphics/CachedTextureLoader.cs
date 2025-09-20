@@ -9,7 +9,7 @@ namespace Miyu.UI.Graphics;
 public class CachedTextureLoader : LargeTextureStore
 {
     public CachedTextureLoader(IRenderer renderer, CachedImageStore store)
-        : base(renderer, store, TextureFilteringMode.Nearest, false)
+        : base(renderer, store, TextureFilteringMode.Linear, false)
     {
     }
 }
