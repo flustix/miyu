@@ -3,6 +3,6 @@
 
 namespace Miyu.Native.libsodium;
 
-public static class Sodium
+public static partial class Sodium
 {
 }

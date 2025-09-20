@@ -25,14 +25,10 @@ public class UdpConnection
     }
 
     public Task Send(byte[] data, int len)
-    {
-        return client.SendAsync(data, len, endpoint.Address.ToString(), endpoint.Port);
-    }
+        => client.SendAsync(data, len, endpoint.Address.ToString(), endpoint.Port);
 
     public Task<byte[]> Receive()
-    {
-        return Task.FromResult(queue.Take(token));
-    }
+        => Task.FromResult(queue.Take(token));
 
     public void Close()
     {

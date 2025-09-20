@@ -1,9 +1,15 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Buffers;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Channels;
 using Midori.Logging;
 using Midori.Utils;
 using Miyu.Attributes;
@@ -11,10 +17,12 @@ using Miyu.Events;
 using Miyu.Events.Voice;
 using Miyu.Models.Channels;
 using Miyu.Models.Guilds;
+using Miyu.Native.libsodium;
 using Miyu.Networking.Gateway;
 using Miyu.Networking.Gateway.Payloads;
 using Miyu.Networking.WebSocket;
 using Miyu.Utils;
+using Miyu.Voice.Codec;
 using Miyu.Voice.Payloads;
 using Newtonsoft.Json.Linq;
 
@@ -38,8 +46,15 @@ public class VoiceManager
     private ulong? guild;
     private string? token;
 
-    private uint ssrc;
     private byte[] key = [];
+    private Encryption encryption;
+
+    private ushort sequence;
+    private uint timestamp;
+    private uint ssrc;
+    private uint nonce;
+
+    private readonly VoiceAudioFormat format = new();
 
     private UdpConnection udp = null!;
 
@@ -65,6 +80,8 @@ public class VoiceManager
         if (voiceWebSocket is not null)
             return;
 
+        transmitting = new ConcurrentDictionary<uint, object>();
+
         var payload = new GatewayPayload
         {
             OpCode = GatewayOpCode.VoiceStateUpdate,
@@ -73,7 +90,7 @@ public class VoiceManager
                 GuildID = guild?.ID ?? 0,
                 ChannelID = channel.ID,
                 SelfDeaf = false,
-                SelfMute = true
+                SelfMute = false
             }
         };
 
@@ -114,7 +131,7 @@ public class VoiceManager
     #region Heartbeat
 
     private int heartbeatInterval;
-    private long sequence = 1;
+    private long heartbeatSequence = 1;
 
     private async Task heartbeatLoop()
     {
@@ -142,7 +159,7 @@ public class VoiceManager
             Data = new
             {
                 t = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                seq_ack = sequence++
+                seq_ack = heartbeatSequence++
             }
         });
     }
@@ -195,7 +212,6 @@ public class VoiceManager
                     if (sd == null)
                         throw new InvalidOperationException("expected sd payload");
 
-                    key = sd.SecretKey;
                     _ = postSessionDescription(sd);
                     break;
                 }
@@ -304,6 +320,8 @@ public class VoiceManager
             }
         });
 
+        transmit = Channel.CreateBounded<VoicePacket>(new BoundedChannelOptions(25));
+
         sendSource = new CancellationTokenSource();
         sendTask = Task.Run(sendLoop, sendSource.Token);
 
@@ -313,27 +331,234 @@ public class VoiceManager
 
     private async Task postSessionDescription(VoiceSessionDescription sd)
     {
+        key = sd.SecretKey;
+
+        encryption = sd.Mode switch
+        {
+            "xsalsa20_poly1305_lite" => Encryption.PolyLite,
+            "xsalsa20_poly1305_suffix" => Encryption.PolySuffix,
+            "xsalsa20_poly1305" => Encryption.Poly,
+            _ => throw new ArgumentException()
+        };
+
+        // setup keepalive
+
+        await sendSilence(3);
+
+        // init = true
+        // start ready wait
     }
 
     #endregion
 
     #region rcv/snd loop
 
+    private long queueCount;
+    private Channel<VoicePacket>? transmit;
+    private TaskCompletionSource<bool>? playWait;
+    private ConcurrentDictionary<uint, object> transmitting = null!;
+
+    private async Task queuePacket(VoicePacket pack)
+    {
+        Debug.Assert(transmit != null);
+        await transmit.Writer.WriteAsync(pack);
+        queueCount++;
+    }
+
     private async Task sendLoop()
     {
-        while (sendSource?.Token is { IsCancellationRequested: false })
+        var syncTicks = (double)Stopwatch.GetTimestamp();
+        var syncRes = Stopwatch.Frequency * 0.005;
+        var tickRes = 10000000.0 / Stopwatch.Frequency;
+
+        Logger.Add($"sr: {syncRes}, tr: {tickRes}, hr: {Stopwatch.IsHighResolution}", LogLevel.Debug);
+
+        var encoder = MiyuOpus.CreateEncoder(format);
+
+        byte[] data = null!;
+        var length = 0;
+
+        try
         {
+            while (sendSource?.Token is { IsCancellationRequested: false })
+            {
+                if (transmit is null) break;
+
+                var available = transmit.Reader.TryRead(out var packet);
+                if (available) Debug.Assert(packet != null);
+
+                if (available)
+                {
+                    queueCount--;
+
+                    if (playWait is null || playWait.Task.IsCompleted)
+                        playWait = new TaskCompletionSource<bool>();
+
+                    available = prepPacket(packet!.Bytes.Span, out data, out length);
+
+                    if (packet.Rented != null)
+                        ArrayPool<byte>.Shared.Return(packet.Rented);
+                }
+
+                var modifier = available ? packet!.Duration / 5 : 4;
+                var cts = Math.Max(Stopwatch.GetTimestamp() - syncTicks, 0);
+
+                if (cts < syncRes * modifier)
+                    await Task.Delay(TimeSpan.FromTicks((long)((syncRes * modifier - cts) * tickRes)));
+
+                syncTicks += syncRes * modifier;
+
+                if (!available)
+                    continue;
+
+                await updateSpeaking(true);
+                await udp.Send(data, length);
+                ArrayPool<byte>.Shared.Return(data);
+
+                if (!packet!.Silence && queueCount == 0)
+                    await sendSilence(3);
+                else if (queueCount == 0)
+                {
+                    await updateSpeaking(false);
+                    playWait?.SetResult(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
+        bool prepPacket(Span<byte> pcm, out byte[] result, out int length)
+        {
+            var packet = ArrayPool<byte>.Shared.Rent(RTP.GetPacketSize(format.SampleCountToSampleSize(format.MaxFrameSize), encryption));
+            var span = packet.AsSpan();
+
+            RTP.EncodeHeader(sequence, timestamp, ssrc, span);
+            var opus = span.Slice(RTP.HEADER_SIZE, pcm.Length);
+            MiyuOpus.Encode(encoder, format, pcm, ref opus);
+
+            sequence++;
+            timestamp += (uint)format.GetFrameSize(format.GetSampleDuration(pcm.Length));
+
+            var nonceSpan = (Span<byte>)stackalloc byte[Sodium.SecretBox.NonceSize];
+
+            switch (encryption)
+            {
+                case Encryption.PolyLite:
+                {
+                    if (nonceSpan.Length != Sodium.SecretBox.NonceSize)
+                        throw new Exception("target size does not match nonce size");
+
+                    BinaryPrimitives.WriteUInt32BigEndian(nonceSpan, nonce++);
+                    zeroFill(nonceSpan[4..]);
+                    break;
+                }
+
+                default:
+                    ArrayPool<byte>.Shared.Return(packet);
+                    throw new ArgumentOutOfRangeException(nameof(encryption), "Invalid encryption mode.");
+            }
+
+            var encrypted = (Span<byte>)stackalloc byte[opus.Length + Sodium.SecretBox.MacSize];
+
+            var state = Sodium.SecretBox.Encrypt(opus, encrypted, key, nonceSpan);
+            if (state != 0) throw new CryptographicException("Failed to encrypt with sodium.");
+
+            encrypted.CopyTo(span[RTP.HEADER_SIZE..]);
+            span = span[..RTP.GetPacketSize(encrypted.Length, encryption)];
+
+            switch (encryption)
+            {
+                case Encryption.PolyLite:
+                {
+                    nonceSpan[..4].CopyTo(span[^4..]);
+                    break;
+                }
+
+                default:
+                    ArrayPool<byte>.Shared.Return(packet);
+                    throw new ArgumentOutOfRangeException(nameof(encryption), "Invalid encryption mode.");
+            }
+
+            result = packet;
+            length = span.Length;
+            return true;
+        }
+    }
+
+    private async Task sendSilence(int count)
+    {
+        var size = format.GetSampleSize(20);
+
+        for (var i = 0; i < count; i++)
+        {
+            var pk = new byte[size];
+            var mem = pk.AsMemory();
+            await queuePacket(new VoicePacket(mem, 20, true));
         }
     }
 
     private async Task receiveLoop()
     {
-        while (receiveSource?.Token is { IsCancellationRequested: false })
+        try
         {
-            var data = await udp.Receive();
-            Logger.Add($"got packet with {data.Length} bytes");
+            while (receiveSource?.Token is { IsCancellationRequested: false })
+            {
+                var data = await udp.Receive();
+                Logger.Add($"got packet with {data.Length} bytes");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
+        void procPacket(ReadOnlySpan<byte> data)
+        {
+            if (!RTP.IsHeader(data))
+                return;
+
+            RTP.DecodeHeader(data, out var seq, out var time, out var s, out var ext);
         }
     }
 
+    private bool speaking = false;
+
+    private async Task updateSpeaking(bool speaking)
+    {
+        if (voiceWebSocket is null)
+            throw new InvalidOperationException("WebSocket is not connected.");
+
+        if (this.speaking == speaking)
+            return;
+
+        await sendPayload(new VoiceGatewayPayload
+        {
+            OpCode = VoiceOpCode.Speaking,
+            Data = new
+            {
+                speaking,
+                delay = 0
+            }
+        });
+
+        this.speaking = speaking;
+    }
+
     #endregion
+
+    private static void zeroFill(Span<byte> buffer)
+    {
+        var idx = 0;
+
+        for (; idx < buffer.Length / 4; idx++)
+            MemoryMarshal.Write(buffer, 0);
+
+        var remaining = buffer.Length % 4;
+        if (remaining == 0) return;
+
+        for (; idx < buffer.Length; idx++)
+            buffer[idx] = 0;
+    }
 }

@@ -9,9 +9,9 @@ internal class VoicePacket
     public int Duration { get; }
     public bool Silence { get; }
 
-    public Memory<byte>? Rented { get; }
+    public byte[]? Rented { get; }
 
-    public VoicePacket(Memory<byte> bytes, int duration, bool silence, Memory<byte>? rented = null)
+    public VoicePacket(Memory<byte> bytes, int duration, bool silence, byte[]? rented = null)
     {
         Bytes = bytes;
         Duration = duration;
