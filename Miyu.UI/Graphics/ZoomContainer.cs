@@ -1,6 +1,7 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Cursor;
 using osuTK;
@@ -9,7 +10,7 @@ namespace Miyu.UI.Graphics;
 
 public partial class ZoomContainer : CursorTypeContainer
 {
-    public Vector2 Zoom { get; set; }
+    public Bindable<float> Zoom { get; init; } = new();
 
     public ZoomContainer(Drawable child)
     {
@@ -21,10 +22,10 @@ public partial class ZoomContainer : CursorTypeContainer
     {
         base.Update();
 
-        var x = 1 / Zoom.X;
-        var y = 1 / Zoom.Y;
+        var x = 1 / Zoom.Value;
+        var y = 1 / Zoom.Value;
 
         Size = new Vector2(x, y);
-        Scale = Zoom;
+        Scale = new Vector2(Zoom.Value);
     }
 }

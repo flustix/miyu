@@ -18,12 +18,22 @@ public class ClientConfig : IniConfigManager<ClientConfigEntry>
         base.InitialiseDefaults();
 
         SetDefault(ClientConfigEntry.Token, "");
-        SetDefault(ClientConfigEntry.Zoom, 1f, 0.5f, 2f);
+        SetDefault(ClientConfigEntry.Zoom, 1f, 0.8f, 2f, 0.1f);
+        SetDefault(ClientConfigEntry.Animations, true);
+    }
+
+    public double AnimLen(double duration)
+    {
+        if (Get<bool>(ClientConfigEntry.Animations))
+            return duration;
+
+        return 0;
     }
 }
 
 public enum ClientConfigEntry
 {
     Token,
-    Zoom
+    Zoom,
+    Animations
 }

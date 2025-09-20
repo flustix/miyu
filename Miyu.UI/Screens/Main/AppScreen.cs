@@ -8,6 +8,7 @@ using Miyu.UI.Components.Pages;
 using Miyu.UI.Config;
 using Miyu.UI.Input;
 using Miyu.UI.Screens.Main.Pages.Home;
+using Miyu.UI.Screens.Main.Settings;
 using Miyu.UI.Screens.Main.User;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
@@ -17,6 +18,7 @@ using osu.Framework.Graphics.Shapes;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
 using osu.Framework.Screens;
+using osuTK.Input;
 
 namespace Miyu.UI.Screens.Main;
 
@@ -28,11 +30,15 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
     [Resolved]
     private MiyuApp app { get; set; } = null!;
 
+    [Resolved]
+    private ClientConfig config { get; set; } = null!;
+
     private DependencyContainer dependencies = null!;
 
     private const float list_width = 72;
     private Container? guildListWrap;
     private UserArea? user;
+    public AppSettings? Settings { get; private set; }
 
     private readonly BindableBool leftSideVisible = new(true);
     private readonly BindableBool rightSideVisible = new(true);
@@ -56,8 +62,8 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
         {
             if (guildListWrap is null || user is null) return;
 
-            guildListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, 300, Easing.OutQuint);
-            user.MoveToX(v.NewValue ? 0 : -user.DrawWidth, 300, Easing.OutQuint);
+            guildListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, config.AnimLen(300), Easing.OutQuint);
+            user.MoveToX(v.NewValue ? 0 : -user.DrawWidth, config.AnimLen(300), Easing.OutQuint);
         });
 
         client.RegisterListeners(this);
@@ -109,7 +115,8 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
                     }
                 }
             },
-            user
+            user,
+            Settings = new AppSettings()
         };
     }
 
@@ -151,5 +158,21 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
 
     public void OnReleased(KeyBindingReleaseEvent<MiyuBind> e)
     {
+    }
+
+    protected override bool OnKeyDown(KeyDownEvent e)
+    {
+        if (e.Repeat || !e.AltPressed)
+            return false;
+
+        switch (e.Key)
+        {
+            case Key.Number1:
+                Settings?.Expire();
+                AddInternal(Settings = new AppSettings());
+                return true;
+        }
+
+        return false;
     }
 }

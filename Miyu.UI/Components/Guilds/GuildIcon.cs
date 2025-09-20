@@ -43,7 +43,7 @@ public partial class GuildIcon : MiyuClickable
             icon = new DelayedImage($"https://cdn.discordapp.com/icons/{Guild.ID}/{Guild.Icon}.png")
             {
                 RelativeSizeAxes = Axes.Both,
-                OnLoadComplete = s => s.FadeInFromZero(200)
+                AnimateAppear = s => s.FadeInFromZero(200)
             };
         }
         else

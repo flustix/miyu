@@ -1,6 +1,8 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using Miyu.UI.Config;
+using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Shapes;
 
@@ -9,6 +11,9 @@ namespace Miyu.UI.Graphics;
 public partial class HoverLayer : Box
 {
     public float TargetAlpha { get; init; } = .2f;
+
+    [Resolved]
+    private ClientConfig config { get; set; } = null!;
 
     public HoverLayer()
     {
@@ -19,11 +24,11 @@ public partial class HoverLayer : Box
 
     public override void Show()
     {
-        this.FadeTo(TargetAlpha, 50);
+        this.FadeTo(TargetAlpha, config.AnimLen(50));
     }
 
     public override void Hide()
     {
-        this.FadeOut(200);
+        this.FadeOut(config.AnimLen(200));
     }
 }

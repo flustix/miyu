@@ -67,7 +67,7 @@ public partial class ChatMessage : ChatMessageBase
                             new DelayedImage($"https://cdn.discordapp.com/avatars/{Message.Author.ID}/{Message.Author.AvatarHash}.png?size=64")
                             {
                                 RelativeSizeAxes = Axes.Both,
-                                OnLoadComplete = s => s.FadeInFromZero(400)
+                                AnimateAppear = s => s.FadeInFromZero(400)
                             }
                         }
                     },
@@ -208,7 +208,7 @@ public partial class ChatMessage : ChatMessageBase
                     Child = new DelayedImage($"https://cdn.discordapp.com/avatars/{message.Author.ID}/{message.Author.AvatarHash}.png?size=64")
                     {
                         RelativeSizeAxes = Axes.Both,
-                        OnLoadComplete = s => s.FadeInFromZero(400)
+                        AnimateAppear = s => s.FadeInFromZero(400)
                     }
                 },
                 new MiyuText

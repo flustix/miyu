@@ -1,6 +1,7 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using Miyu.UI.Config;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -11,11 +12,20 @@ namespace Miyu.UI.Graphics;
 public partial class DelayedImage : DelayedLoadUnloadWrapper
 {
     public new Action<Sprite>? OnLoadComplete { get; set; } = null;
+    public Action<Sprite>? AnimateAppear { get; set; } = null;
+
+    [Resolved]
+    private ClientConfig config { get; set; } = null!;
 
     public DelayedImage(string path)
         : base(() => new Image(path), 0, 2000)
     {
-        DelayedLoadComplete += d => { OnLoadComplete?.Invoke((Sprite)d); };
+        DelayedLoadComplete += d =>
+        {
+            OnLoadComplete?.Invoke((Sprite)d);
+            if (config.Get<bool>(ClientConfigEntry.Animations))
+                AnimateAppear?.Invoke((Sprite)d);
+        };
     }
 
     [LongRunningLoad]

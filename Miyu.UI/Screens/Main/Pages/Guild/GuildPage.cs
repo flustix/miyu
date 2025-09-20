@@ -4,6 +4,7 @@
 using Miyu.Models.Guilds;
 using Miyu.UI.Components.Channels;
 using Miyu.UI.Components.Pages;
+using Miyu.UI.Config;
 using Miyu.UI.Screens.Main.User;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
@@ -17,6 +18,9 @@ public partial class GuildPage : Page
 {
     [Resolved]
     private AppScreen app { get; set; } = null!;
+
+    [Resolved]
+    private ClientConfig config { get; set; } = null!;
 
     public DiscordGuild Guild { get; }
 
@@ -97,7 +101,7 @@ public partial class GuildPage : Page
     protected override void LoadComplete()
     {
         base.LoadComplete();
-        leftSideVisible.BindValueChanged(v => channelListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, 300, Easing.OutQuint), true);
+        leftSideVisible.BindValueChanged(v => channelListWrap.ResizeWidthTo(v.NewValue ? list_width : 0, config.AnimLen(300), Easing.OutQuint), true);
     }
 
     protected override void Update()

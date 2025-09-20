@@ -5,6 +5,8 @@ namespace Miyu.UI.Input;
 
 public enum MiyuBind
 {
+    Back,
+
     SwitchGuildUp,
     SwitchGuildDown,
     SwitchChannelUp,

@@ -11,18 +11,18 @@ using Miyu.UI.Overlay;
 using Miyu.UI.Screens.Authentication;
 using osu.Framework;
 using osu.Framework.Allocation;
+using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Cursor;
 using osu.Framework.IO.Stores;
 using osu.Framework.Logging;
 using osu.Framework.Screens;
-using osuTK;
 
 namespace Miyu.UI;
 
 public partial class MiyuApp : Game
 {
-    protected virtual float ZoomValue => config.Get<float>(ClientConfigEntry.Zoom);
+    protected virtual Bindable<float> ZoomValue => config.GetBindable<float>(ClientConfigEntry.Zoom);
 
     private DependencyContainer dependencies = null!;
     private ClientConfig config = null!;
@@ -90,7 +90,7 @@ public partial class MiyuApp : Game
                     }
                 }
             }
-        }) { Zoom = new Vector2(ZoomValue) });
+        }) { Zoom = ZoomValue });
     }
 
     protected override void LoadComplete()

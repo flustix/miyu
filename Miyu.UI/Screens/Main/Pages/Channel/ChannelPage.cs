@@ -11,6 +11,7 @@ using Miyu.Models.Guilds;
 using Miyu.UI.Components.Messages;
 using Miyu.UI.Components.Overlays;
 using Miyu.UI.Components.Pages;
+using Miyu.UI.Config;
 using Miyu.UI.Graphics;
 using Miyu.UI.Screens.Main.Pages.Channel.Input;
 using osu.Framework.Allocation;
@@ -28,6 +29,9 @@ public partial class ChannelPage : Page
 {
     [Resolved]
     private MiyuClient client { get; set; } = null!;
+
+    [Resolved]
+    private ClientConfig config { get; set; } = null!;
 
     [Resolved]
     private OverlayManager overlays { get; set; } = null!;
@@ -275,10 +279,10 @@ public partial class ChannelPage : Page
 
         msg.AlwaysPresent = true;
         flow.Add(msg);
-        msg.FadeInFromZero(100);
+        msg.FadeInFromZero(config.AnimLen(100));
 
         if (atEnd)
-            ScheduleAfterChildren(() => scroll.ScrollToEnd());
+            ScheduleAfterChildren(() => scroll.ScrollToEnd(config.Get<bool>(ClientConfigEntry.Animations)));
     }
 
     protected override bool OnKeyDown(KeyDownEvent e)
@@ -288,7 +292,7 @@ public partial class ChannelPage : Page
         switch (e.Key)
         {
             case Key.Escape:
-                scroll.ScrollToEnd();
+                scroll.ScrollToEnd(config.Get<bool>(ClientConfigEntry.Animations));
                 return true;
         }
 

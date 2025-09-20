@@ -100,7 +100,7 @@ public partial class MessageAttachments : FillFlowContainer
                 image = new DelayedImage(url)
                 {
                     RelativeSizeAxes = Axes.Both,
-                    OnLoadComplete = s => s.FadeInFromZero(400)
+                    AnimateAppear = s => s.FadeInFromZero(400)
                 }
             };
         }

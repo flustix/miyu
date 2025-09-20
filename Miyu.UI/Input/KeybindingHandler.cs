@@ -7,8 +7,18 @@ namespace Miyu.UI.Input;
 
 public partial class KeybindingHandler : KeyBindingContainer<MiyuBind>
 {
+    protected override bool Prioritised => true;
+
+    public KeybindingHandler()
+        : base(matchingMode: KeyCombinationMatchingMode.Modifiers)
+    {
+    }
+
     public override IEnumerable<IKeyBinding> DefaultKeyBindings => new List<IKeyBinding>
     {
+        new KeyBinding(InputKey.Escape, MiyuBind.Back),
+        // new KeyBinding(InputKey.ExtraMouseButton1, MiyuBind.Back),
+
         new KeyBinding(new KeyCombination(InputKey.Control, InputKey.Up), MiyuBind.SwitchGuildUp),
         new KeyBinding(new KeyCombination(InputKey.Control, InputKey.Down), MiyuBind.SwitchGuildDown),
         new KeyBinding(new KeyCombination(InputKey.Shift, InputKey.Up), MiyuBind.SwitchChannelUp),

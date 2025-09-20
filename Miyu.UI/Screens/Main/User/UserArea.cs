@@ -6,12 +6,16 @@ using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
+using osu.Framework.Input.Events;
 using osuTK;
 
 namespace Miyu.UI.Screens.Main.User;
 
 public partial class UserArea : CompositeDrawable
 {
+    [Resolved]
+    private AppScreen app { get; set; } = null!;
+
     public const float PADDING = 8;
 
     [BackgroundDependencyLoader]
@@ -94,5 +98,11 @@ public partial class UserArea : CompositeDrawable
                 }
             }
         };
+    }
+
+    protected override bool OnClick(ClickEvent e)
+    {
+        app.Settings?.Show();
+        return true;
     }
 }
