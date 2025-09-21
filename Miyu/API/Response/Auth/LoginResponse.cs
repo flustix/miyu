@@ -11,5 +11,14 @@ public class LoginResponse
     public ulong? UserID { get; set; }
 
     [JsonProperty("token")]
-    public string? Token { get; set; } = "";
+    public string? Token { get; set; }
+
+    [JsonProperty("ticket")]
+    public string? Ticket { get; set; }
+
+    [JsonProperty("login_instance_id")]
+    public string? LoginInstanceID { get; set; }
+
+    [JsonProperty("totp")]
+    public bool Totp { get; set; }
 }

@@ -2,14 +2,18 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using Miyu.API.Requests.Auth;
+using Miyu.UI.Components.Form;
 using Miyu.UI.Config;
+using Miyu.UI.Graphics;
 using Miyu.UI.Screens.Main;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
-using osu.Framework.Graphics.UserInterface;
+using osu.Framework.Graphics.Sprites;
+using osu.Framework.Graphics.Textures;
+using osu.Framework.Input;
 using osu.Framework.Screens;
 using osuTK;
 
@@ -26,13 +30,23 @@ public partial class AuthScreen : Screen
     [Resolved]
     private ClientConfig config { get; set; } = null!;
 
-    private BasicTextBox username = null!;
-    private BasicTextBox password = null!;
+    private Container content = null!;
+    private FillFlowContainer loginForm = null!;
+    private FillFlowContainer totpForm = null!;
+
+    private MiyuText loginError = null!;
+    private MiyuLabeledTextBox username = null!;
+    private MiyuLabeledTextBox password = null!;
+
+    private MiyuText totpError = null!;
+    private MiyuLabeledTextBox totp = null!;
 
     private Bindable<string> tokenBind = null!;
+    private string ticket = "";
+    private string instance = "";
 
     [BackgroundDependencyLoader]
-    private void load()
+    private void load(TextureStore textures)
     {
         RelativeSizeAxes = Axes.Both;
 
@@ -40,10 +54,13 @@ public partial class AuthScreen : Screen
 
         InternalChildren = new Drawable[]
         {
-            new Box
+            new Sprite
             {
                 RelativeSizeAxes = Axes.Both,
-                Colour = Catppuccin.Current.Crust
+                Texture = textures.Get("login-background"),
+                FillMode = FillMode.Fill,
+                Anchor = Anchor.Centre,
+                Origin = Anchor.Centre
             },
             new Container
             {
@@ -59,36 +76,57 @@ public partial class AuthScreen : Screen
                         RelativeSizeAxes = Axes.Both,
                         Colour = Catppuccin.Current.Base
                     },
-                    new FillFlowContainer
+                    content = new Container
                     {
-                        Width = 420,
+                        Width = 480,
                         AutoSizeAxes = Axes.Y,
-                        Direction = FillDirection.Vertical,
                         Padding = new MarginPadding(32),
-                        Spacing = new Vector2(20),
                         Children = new Drawable[]
                         {
-                            username = new BasicTextBox
+                            loginForm = new FillFlowContainer
                             {
                                 RelativeSizeAxes = Axes.X,
-                                Height = 44,
-                                PlaceholderText = "Email or Phone Number"
+                                AutoSizeAxes = Axes.Y,
+                                Direction = FillDirection.Vertical,
+                                Spacing = new Vector2(20),
+                                Children = new Drawable[]
+                                {
+                                    loginError = new MiyuText
+                                    {
+                                        Text = "error message",
+                                        Colour = Catppuccin.Current.Red,
+                                        Weight = FontWeight.Bold,
+                                        FontSize = 16,
+                                        Alpha = 0
+                                    },
+                                    username = new MiyuLabeledTextBox("Email or Phone Number", TextInputType.EmailAddress, true),
+                                    password = new MiyuLabeledTextBox("Password", TextInputType.Password, true),
+                                    new MiyuButton("Log In", login) { RelativeSizeAxes = Axes.X }
+                                }
                             },
-                            password = new BasicTextBox
+                            totpForm = new FillFlowContainer
                             {
                                 RelativeSizeAxes = Axes.X,
-                                Height = 44,
-                                PlaceholderText = "Password"
-                            },
-                            new BasicButton
-                            {
-                                RelativeSizeAxes = Axes.X,
-                                Height = 44,
-                                Text = "Log In",
-                                Action = login
+                                AutoSizeAxes = Axes.Y,
+                                Direction = FillDirection.Vertical,
+                                Spacing = new Vector2(20),
+                                Alpha = 0,
+                                Children = new Drawable[]
+                                {
+                                    totpError = new MiyuText
+                                    {
+                                        Text = "error message",
+                                        Colour = Catppuccin.Current.Red,
+                                        Weight = FontWeight.Bold,
+                                        FontSize = 16,
+                                        Alpha = 0
+                                    },
+                                    totp = new MiyuLabeledTextBox("Enter Discord Auth Code", TextInputType.Number, true),
+                                    new MiyuButton("Confirm", sendTotp) { RelativeSizeAxes = Axes.X }
+                                }
                             }
                         }
-                    }
+                    },
                 }
             }
         };
@@ -104,10 +142,54 @@ public partial class AuthScreen : Screen
 
     private async void login()
     {
+        content.AutoSizeDuration = 300;
+        content.AutoSizeEasing = Easing.OutQuint;
+
+        loginError.Hide();
         var res = await client.API.Execute(new LoginRequest(username.Text, password.Text));
 
-        if (res?.Token is null)
+        if (string.IsNullOrWhiteSpace(res?.Token))
+        {
+            if (res?.Ticket != null)
+            {
+                ticket = res.Ticket;
+                instance = res.LoginInstanceID!;
+
+                if (res.Totp)
+                {
+                    loginForm.Hide();
+                    totpForm.Show();
+                }
+                else
+                {
+                    loginError.Text = "Enable TOTP in your discord account.";
+                    loginError.Show();
+                }
+            }
+            else
+            {
+                loginError.Text = "Failed to log in!";
+                loginError.Show();
+            }
+
             return;
+        }
+
+        tokenBind.Value = res.Token;
+        continueToMain();
+    }
+
+    private async void sendTotp()
+    {
+        totpError.Hide();
+        var res = await client.API.Execute(new TotpRequest(totp.Text, ticket, instance));
+
+        if (string.IsNullOrWhiteSpace(res?.Token))
+        {
+            totpError.Text = "Invalid Code!";
+            totpError.Show();
+            return;
+        }
 
         tokenBind.Value = res.Token;
         continueToMain();

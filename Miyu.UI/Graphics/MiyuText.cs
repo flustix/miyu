@@ -8,11 +8,13 @@ namespace Miyu.UI.Graphics;
 
 public partial class MiyuText : SpriteText
 {
+    public const float SIZE_FACTOR = 1.4f;
+
     public float FontSize
     {
         set
         {
-            Font = Font.With("ggsans", value * 1.4f);
+            Font = Font.With("ggsans", value * SIZE_FACTOR);
             GlyphOffset = new Vector2(0, -value * 0.1f);
         }
     }
