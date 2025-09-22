@@ -15,6 +15,7 @@ using Miyu.UI.Config;
 using Miyu.UI.Graphics;
 using Miyu.UI.Screens.Main.Pages.Channel.Input;
 using osu.Framework.Allocation;
+using osu.Framework.Bindables;
 using osu.Framework.Extensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
@@ -43,6 +44,10 @@ public partial class ChannelPage : Page
     private FillFlowContainer<ChatMessageBase> flow = null!;
     private MiyuText title = null!;
     private ChannelTextBox textBox = null!;
+
+    private const float reply_height = 38;
+    private Container replyContainer = null!;
+    private MiyuText replyText = null!;
 
     private bool loading = true;
     private readonly List<DiscordMessage> queue = new();
@@ -131,6 +136,50 @@ public partial class ChannelPage : Page
                             Padding = new MarginPadding { Horizontal = 8, Bottom = 24 },
                             Children = new Drawable[]
                             {
+                                replyContainer = new Container
+                                {
+                                    RelativeSizeAxes = Axes.X,
+                                    Height = 52,
+                                    CornerRadius = 8,
+                                    Masking = true,
+                                    Children = new Drawable[]
+                                    {
+                                        new Box
+                                        {
+                                            RelativeSizeAxes = Axes.Both,
+                                            Colour = Catppuccin.Current.Surface0
+                                        },
+                                        new Container
+                                        {
+                                            RelativeSizeAxes = Axes.Both,
+                                            Padding = new MarginPadding(16) { Bottom = 16 + 14 },
+                                            Children = new Drawable[]
+                                            {
+                                                replyText = new MiyuText
+                                                {
+                                                    Text = "Replying to",
+                                                    Anchor = Anchor.CentreLeft,
+                                                    Origin = Anchor.CentreLeft,
+                                                    Weight = FontWeight.SemiBold,
+                                                    FontSize = 14,
+                                                },
+                                                new MiyuClickable
+                                                {
+                                                    AutoSizeAxes = Axes.Both,
+                                                    Anchor = Anchor.CentreRight,
+                                                    Origin = Anchor.CentreRight,
+                                                    Action = () => replyTo(null),
+                                                    Child = new MiyuText
+                                                    {
+                                                        Text = "X",
+                                                        Weight = FontWeight.SemiBold,
+                                                        FontSize = 14
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
                                 textBox = new ChannelTextBox(Channel)
                                 {
                                     PlaceholderText = $"Message #{Channel.Name}",
@@ -186,6 +235,19 @@ public partial class ChannelPage : Page
             foreach (var message in queue)
                 createMessage(message);
         }));
+
+        currentReply.BindValueChanged(x =>
+        {
+            if (x.NewValue == null)
+            {
+                replyContainer.MoveToY(0, config.AnimLen(400), Easing.OutQuint);
+                return;
+            }
+
+            var author = x.NewValue.Message.Author;
+            replyText.Text = $"Replying to {author.DisplayName ?? author.Username}";
+            replyContainer.MoveToY(-reply_height, config.AnimLen(400), Easing.OutQuint);
+        });
     }
 
     protected override void Update()
@@ -200,6 +262,14 @@ public partial class ChannelPage : Page
 
         characterCount = textBox.Text.Length;
         ensureTextBoxFocused();
+
+        var targetPad = 16 - replyContainer.Y;
+        if (Math.Abs(targetPad - replyContainer.Padding.Bottom) < 0.01f) return;
+
+        var delta = targetPad - flow.Padding.Bottom;
+        if (delta != 0) scroll.ScrollBy(delta, false);
+
+        flow.Padding = new MarginPadding { Bottom = targetPad };
     }
 
     private void ensureTextBoxFocused()
@@ -236,6 +306,10 @@ public partial class ChannelPage : Page
             return;
 
         var req = new CreateMessageRequest(Channel.ID, content);
+
+        if (currentReply.Value != null)
+            req.ReplyTo(currentReply.Value.Message.ID);
+
         _ = client.API.Execute(req);
         lastTyping = 0;
     }
@@ -277,6 +351,16 @@ public partial class ChannelPage : Page
                 break;
         }
 
+        msg.DoubleClickAction = () =>
+        {
+            if (message.Author.ID == client.Self.ID)
+            {
+                // edit message
+            }
+            else
+                replyTo(msg);
+        };
+
         msg.AlwaysPresent = true;
         flow.Add(msg);
         msg.FadeInFromZero(config.AnimLen(100));
@@ -292,10 +376,27 @@ public partial class ChannelPage : Page
         switch (e.Key)
         {
             case Key.Escape:
+                if (currentReply.Value != null)
+                {
+                    replyTo(null);
+                    return true;
+                }
+
                 scroll.ScrollToEnd(config.Get<bool>(ClientConfigEntry.Animations));
                 return true;
         }
 
         return false;
     }
+
+    #region Replying
+
+    private readonly Bindable<ChatMessageBase?> currentReply = new();
+
+    private void replyTo(ChatMessageBase? msg)
+    {
+        currentReply.Value = msg;
+    }
+
+    #endregion
 }

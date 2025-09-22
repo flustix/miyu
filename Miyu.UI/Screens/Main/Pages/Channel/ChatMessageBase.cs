@@ -44,6 +44,9 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
     [Resolved]
     private Clipboard clipboard { get; set; } = null!;
 
+    public Action? DoubleClickAction { get; set; }
+    protected virtual bool AllowDoubleClick => true;
+
     private HoverLayer? hover;
 
     protected IEnumerable<Drawable> CreateBackground()
@@ -88,5 +91,16 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
     protected override void OnHoverLost(HoverLostEvent e)
     {
         hover?.Hide();
+    }
+
+    protected override bool OnClick(ClickEvent e) => true;
+
+    protected override bool OnDoubleClick(DoubleClickEvent e)
+    {
+        if (!AllowDoubleClick)
+            return false;
+
+        DoubleClickAction?.Invoke();
+        return true;
     }
 }
