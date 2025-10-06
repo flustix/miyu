@@ -311,7 +311,9 @@ public partial class ChannelPage : Page
             req.ReplyTo(currentReply.Value.Message.ID);
 
         _ = client.API.Execute(req);
+
         lastTyping = 0;
+        replyTo(null);
     }
 
     [EventListener(EventType.MessageCreate)]
