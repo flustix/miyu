@@ -55,10 +55,12 @@ public partial class MiyuApp : Game
         foreach (var resource in Resources.GetAvailableResources())
             Logger.Log($"Found resource: {resource}", level: LogLevel.Debug);
 
-        Catppuccin.Load(Resources.Get("Themes/catppuccin.json"));
-
         dependencies.CacheAs(this);
         dependencies.CacheAs(config = new ClientConfig(Host.Storage));
+
+        Catppuccin.Load(Resources.Get("Themes/catppuccin.json"));
+        Catppuccin.SetCurrent(config.Get<string>(ClientConfigEntry.Theme));
+
         dependencies.CacheAs(client = new MiyuClient(new MiyuConfig
         {
             RegisterCommands = false,

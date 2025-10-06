@@ -90,6 +90,12 @@ public abstract partial class SettingsBase : VisibilityContainer, IKeyBindingHan
                                     {
                                         Current = config.GetBindable<bool>(ClientConfigEntry.Animations),
                                         LabelText = "animations"
+                                    },
+                                    new BasicDropdown<string>
+                                    {
+                                        RelativeSizeAxes = Axes.X,
+                                        Current = config.GetBindable<string>(ClientConfigEntry.Theme),
+                                        Items = new[] { "latte", "frappe", "macchiato", "mocha" }
                                     }
                                 }
                             }

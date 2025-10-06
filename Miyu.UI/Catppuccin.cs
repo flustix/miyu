@@ -6,26 +6,36 @@ using Midori.Utils;
 using Newtonsoft.Json.Linq;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Colour;
-using osu.Framework.Logging;
 
 namespace Miyu.UI;
 
 public class Catppuccin
 {
-    public static Style Current => frappe;
+    public static Style Current { get; private set; } = null!;
 
+    private static Style latte { get; set; } = null!;
     private static Style frappe { get; set; } = null!;
+    private static Style macchiato { get; set; } = null!;
+    private static Style mocha { get; set; } = null!;
 
     public static void Load(byte[] bytes)
     {
         var str = Encoding.UTF8.GetString(bytes);
-        Logger.Log($"Loaded Catppuccin theme: {str}", LoggingTarget.Runtime, LogLevel.Debug);
-
         var json = str.Deserialize<JObject>()!;
 
-        frappe = parseStyle(json["frappe"]?.ToObject<JObject>());
-        Logger.Log($"Parsed Catppuccin theme: {frappe}", LoggingTarget.Runtime, LogLevel.Debug);
+        latte = parseStyle(json[nameof(latte)]?.ToObject<JObject>());
+        frappe = parseStyle(json[nameof(frappe)]?.ToObject<JObject>());
+        macchiato = parseStyle(json[nameof(macchiato)]?.ToObject<JObject>());
+        mocha = parseStyle(json[nameof(mocha)]?.ToObject<JObject>());
     }
+
+    public static void SetCurrent(string s) => Current = s switch
+    {
+        nameof(latte) => latte,
+        nameof(macchiato) => macchiato,
+        nameof(mocha) => mocha,
+        _ => frappe
+    };
 
     private static Style parseStyle(JObject? data)
     {

@@ -20,6 +20,7 @@ public class ClientConfig : IniConfigManager<ClientConfigEntry>
         SetDefault(ClientConfigEntry.Token, "");
         SetDefault(ClientConfigEntry.Zoom, 1f, 0.8f, 2f, 0.1f);
         SetDefault(ClientConfigEntry.Animations, true);
+        SetDefault(ClientConfigEntry.Theme, "frappe");
     }
 
     public double AnimLen(double duration)
@@ -35,5 +36,6 @@ public enum ClientConfigEntry
 {
     Token,
     Zoom,
-    Animations
+    Animations,
+    Theme
 }
