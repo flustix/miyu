@@ -25,7 +25,7 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
         {
             var list = new List<MenuItem>
             {
-                new MenuActionItem("Reply", MiyuIcon.Type.Discord, MenuItemType.Normal, () => ReplyAction?.Invoke()) { Enabled = ReplyAction != null },
+                new MenuActionItem("Reply", MiyuIcon.Type.Reply, MenuItemType.Normal, () => ReplyAction?.Invoke()) { Enabled = ReplyAction != null },
                 new MenuSeparatorItem()
             };
 

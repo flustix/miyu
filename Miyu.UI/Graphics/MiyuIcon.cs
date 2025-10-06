@@ -54,6 +54,12 @@ public partial class MiyuIcon : Sprite
         Voice,
 
         [Description("voice-lock")]
-        VoiceLock
+        VoiceLock,
+
+        [Description("reply")]
+        Reply,
+
+        [Description("forward")]
+        Forward
     }
 }
