@@ -76,7 +76,7 @@ public partial class MessageAttachments : FillFlowContainer
         }
     }
 
-    private partial class ImageAttachment : ClickableContainer
+    private partial class ImageAttachment : MiyuClickable
     {
         private readonly float width;
         private readonly float height;
