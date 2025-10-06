@@ -9,10 +9,7 @@ namespace Miyu.UI.Graphics.Menus.Context;
 
 public partial class MiyuContextContainer : ContextMenuContainer
 {
-    protected override Menu CreateMenu()
-    {
-        return new ContextMenu();
-    }
+    protected override Menu CreateMenu() => new ContextMenu();
 
     private partial class ContextMenu : MiyuMenu
     {
@@ -24,9 +21,6 @@ public partial class MiyuContextContainer : ContextMenuContainer
             ItemsContainer.Masking = true;
         }
 
-        protected override Menu CreateSubMenu()
-        {
-            return new ContextMenu();
-        }
+        protected override Menu CreateSubMenu() => new ContextMenu();
     }
 }

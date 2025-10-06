@@ -25,13 +25,10 @@ public partial class MiyuMenu : Menu
         ItemsContainer.Padding = new MarginPadding(8);
     }
 
-    protected override Menu CreateSubMenu()
+    protected override Menu CreateSubMenu() => new MiyuMenu(Direction.Vertical)
     {
-        return new MiyuMenu(Direction.Vertical)
-        {
-            Anchor = Direction == Direction.Horizontal ? Anchor.TopLeft : Anchor.TopRight
-        };
-    }
+        Anchor = Direction == Direction.Horizontal ? Anchor.TopLeft : Anchor.TopRight
+    };
 
     protected override void UpdateSize(Vector2 newSize)
     {
@@ -49,15 +46,8 @@ public partial class MiyuMenu : Menu
         Logger.Log($"MiyuMenu resized to {newSize}");
     }
 
-    protected override void AnimateOpen()
-    {
-        this.FadeInFromZero(100).ScaleTo(0.9f).ScaleTo(1f, 200, Easing.OutBack);
-    }
-
-    protected override void AnimateClose()
-    {
-        this.ScaleTo(0.9f, 200, Easing.OutQuint).FadeOut(100);
-    }
+    protected override void AnimateOpen() => this.FadeInFromZero(100).ScaleTo(0.9f).ScaleTo(1f, 200, Easing.OutElasticQuarter);
+    protected override void AnimateClose() => this.ScaleTo(0.9f, 200, Easing.OutQuint).FadeOut(100);
 
     protected override DrawableMenuItem CreateDrawableMenuItem(MenuItem item) => item switch
     {
@@ -66,11 +56,8 @@ public partial class MiyuMenu : Menu
         _ => new BasicMenu.BasicDrawableMenuItem(item)
     };
 
-    protected override ScrollContainer<Drawable> CreateScrollContainer(Direction direction)
+    protected override ScrollContainer<Drawable> CreateScrollContainer(Direction direction) => new MiyuScrollContainer
     {
-        return new MiyuScrollContainer
-        {
-            ScrollbarVisible = false
-        };
-    }
+        ScrollbarVisible = false
+    };
 }

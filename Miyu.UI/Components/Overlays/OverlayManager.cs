@@ -60,7 +60,7 @@ public partial class OverlayManager : CompositeDrawable
 
     private TransformSequence<T> animateOpen<T>(T draw) where T : Drawable
     {
-        return draw.ScaleTo(0.9f).FadeInFromZero(100).ScaleTo(1f, 600, Easing.OutElasticHalf);
+        return draw.ScaleTo(0.9f).FadeInFromZero(100).ScaleTo(1f, 400, Easing.OutElasticQuarter);
     }
 
     private TransformSequence<T> animateClose<T>(T draw) where T : Drawable
