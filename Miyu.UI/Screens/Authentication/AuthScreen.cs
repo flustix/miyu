@@ -31,8 +31,10 @@ public partial class AuthScreen : Screen
     private ClientConfig config { get; set; } = null!;
 
     private Container content = null!;
+
     private FillFlowContainer loginForm = null!;
     private FillFlowContainer totpForm = null!;
+    private FillFlowContainer tokenForm = null!;
 
     private MiyuText loginError = null!;
     private MiyuLabeledTextBox username = null!;
@@ -40,6 +42,8 @@ public partial class AuthScreen : Screen
 
     private MiyuText totpError = null!;
     private MiyuLabeledTextBox totp = null!;
+
+    private MiyuLabeledTextBox tokenBox = null!;
 
     private Bindable<string> tokenBind = null!;
     private string ticket = "";
@@ -101,7 +105,12 @@ public partial class AuthScreen : Screen
                                     },
                                     username = new MiyuLabeledTextBox("Email or Phone Number", TextInputType.EmailAddress, true),
                                     password = new MiyuLabeledTextBox("Password", TextInputType.Password, true),
-                                    new MiyuButton("Log In", login) { RelativeSizeAxes = Axes.X }
+                                    new MiyuButton("Log In", login) { RelativeSizeAxes = Axes.X },
+                                    new MiyuButton("Login with token", () =>
+                                    {
+                                        loginForm.Hide();
+                                        tokenForm.Show();
+                                    }) { RelativeSizeAxes = Axes.X },
                                 }
                             },
                             totpForm = new FillFlowContainer
@@ -124,6 +133,31 @@ public partial class AuthScreen : Screen
                                     totp = new MiyuLabeledTextBox("Enter Discord Auth Code", TextInputType.Number, true),
                                     new MiyuButton("Confirm", sendTotp) { RelativeSizeAxes = Axes.X }
                                 }
+                            },
+                            tokenForm = new FillFlowContainer
+                            {
+                                RelativeSizeAxes = Axes.X,
+                                AutoSizeAxes = Axes.Y,
+                                Direction = FillDirection.Vertical,
+                                Spacing = new Vector2(20),
+                                Alpha = 0,
+                                Children = new Drawable[]
+                                {
+                                    tokenBox = new MiyuLabeledTextBox("User Token", TextInputType.Password, true),
+                                    new MiyuButton("Confirm", () =>
+                                    {
+                                        if (string.IsNullOrWhiteSpace(tokenBox.Text))
+                                            return;
+
+                                        tokenBind.Value = tokenBox.Text;
+                                        continueToMain();
+                                    }) { RelativeSizeAxes = Axes.X },
+                                    new MiyuButton("Back", () =>
+                                    {
+                                        tokenForm.Hide();
+                                        loginForm.Show();
+                                    }) { RelativeSizeAxes = Axes.X },
+                                }
                             }
                         }
                     },
@@ -138,13 +172,16 @@ public partial class AuthScreen : Screen
 
         if (!string.IsNullOrWhiteSpace(tokenBind.Value))
             continueToMain();
+
+        ScheduleAfterChildren(() =>
+        {
+            content.AutoSizeDuration = 300;
+            content.AutoSizeEasing = Easing.OutQuint;
+        });
     }
 
     private async void login()
     {
-        content.AutoSizeDuration = 300;
-        content.AutoSizeEasing = Easing.OutQuint;
-
         loginError.Hide();
         var res = await client.API.Execute(new LoginRequest(username.Text, password.Text));
 
