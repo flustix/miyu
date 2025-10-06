@@ -193,10 +193,7 @@ public partial class ChannelPage : Page
                                     Origin = Anchor.CentreRight,
                                     X = -16,
                                     Action = () => textBox.ShowPopover(),
-                                    Child = new MiyuText
-                                    {
-                                        Text = "emote"
-                                    }
+                                    Child = new MiyuIcon(MiyuIcon.Type.Emoji, 20)
                                 },
                                 new TypingIndicator(Channel, guild)
                                 {

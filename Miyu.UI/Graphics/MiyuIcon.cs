@@ -60,6 +60,15 @@ public partial class MiyuIcon : Sprite
         Reply,
 
         [Description("forward")]
-        Forward
+        Forward,
+
+        [Description("emoji")]
+        Emoji,
+
+        [Description("sticker")]
+        Sticker,
+
+        [Description("plus")]
+        Plus
     }
 }
