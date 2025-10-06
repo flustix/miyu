@@ -1,0 +1,3 @@
+files are from https://github.com/discord-userdoccers/discord-protos
+
+modified to work with c#

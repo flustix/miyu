@@ -1,12 +1,15 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Diagnostics;
+using Miyu.API.Requests.Users;
 using Miyu.Attributes;
 using Miyu.Events;
 using Miyu.UI.Components.Guilds;
 using Miyu.UI.Components.Pages;
 using Miyu.UI.Config;
 using Miyu.UI.Input;
+using Miyu.UI.Protocol;
 using Miyu.UI.Screens.Main.Pages.Home;
 using Miyu.UI.Screens.Main.Settings;
 using Miyu.UI.Screens.Main.User;
@@ -133,12 +136,29 @@ public partial class AppScreen : Screen, IKeyBindingHandler<MiyuBind>
     [EventListener(EventType.Ready)]
     public void OnReady(ReadyEvent ready)
     {
-        app.Loading.StateText = "Creating content...";
+        app.Loading.StateText = "Downloading settings...";
 
-        app.PrivateChannels = ready.Event.PrivateChannels;
-        createContent();
+        var req1 = new SettingsProtoOneRequest();
+        var req2 = new SettingsProtoTwoRequest();
 
-        app.Loading.Hide();
+        Task.WhenAll(client.API.Execute(req1), client.API.Execute(req2)).ContinueWith(x =>
+        {
+            var res = x.Result;
+            Debug.Assert(res != null);
+
+            var settings = PreloadedUserSettings.Parser.ParseFrom(res[0]!.DecodeString());
+            var frecency = FrecencyUserSettings.Parser.ParseFrom(res[1]!.DecodeString());
+
+            Schedule(() =>
+            {
+                app.Loading.StateText = "Creating content...";
+
+                app.PrivateChannels = ready.Event.PrivateChannels;
+                createContent();
+
+                app.Loading.Hide();
+            });
+        });
     }
 
     protected override IReadOnlyDependencyContainer CreateChildDependencies(IReadOnlyDependencyContainer parent)

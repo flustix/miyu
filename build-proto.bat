@@ -1,0 +1,1 @@
+protoc --csharp_out=Miyu.UI/Protocol "Miyu.UI/Resources/protobuf/user-settings.proto" "Miyu.UI/Resources/protobuf/frecency.proto"
