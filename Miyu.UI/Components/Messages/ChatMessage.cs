@@ -9,12 +9,16 @@ using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
 using osu.Framework.Graphics.Sprites;
+using osu.Framework.Graphics.Textures;
 using osuTK;
 
 namespace Miyu.UI.Components.Messages;
 
 public partial class ChatMessage : ChatMessageBase
 {
+    [Resolved]
+    private TextureStore textures { get; set; } = null!;
+
     public override DiscordMessage Message { get; }
 
     private MiyuText name = null!;
@@ -237,13 +241,13 @@ public partial class ChatMessage : ChatMessageBase
             Height = 20,
             Children = new Drawable[]
             {
-                new SpriteIcon
+                new Sprite
                 {
-                    Size = new Vector2(12),
+                    Size = new Vector2(33, 10),
+                    Texture = textures.Get("reply-arrow"),
                     Origin = Anchor.TopRight,
-                    Position = new Vector2(-8, 4),
-                    Icon = FontAwesome.Solid.AngleDoubleRight,
-                    Colour = Catppuccin.Current.Overlay2
+                    Position = new Vector2(-4, 9),
+                    Colour = Catppuccin.Current.Surface1
                 },
                 flow
             }
