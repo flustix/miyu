@@ -3,7 +3,6 @@
 
 using Miyu.Models.Channels.Messages;
 using Miyu.UI.Graphics;
-using Miyu.UI.Screens.Main.Pages.Channel;
 using Miyu.Utils.Extensions;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;

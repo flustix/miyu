@@ -4,6 +4,7 @@
 using Miyu.Models.Channels.Messages;
 using Miyu.Models.Guilds;
 using Miyu.UI.Graphics;
+using Miyu.UI.Graphics.Menus;
 using Miyu.UI.Graphics.Menus.Items;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
@@ -14,7 +15,7 @@ using osu.Framework.Graphics.UserInterface;
 using osu.Framework.Input.Events;
 using osu.Framework.Platform;
 
-namespace Miyu.UI.Screens.Main.Pages.Channel;
+namespace Miyu.UI.Components.Messages;
 
 public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMenu
 {
@@ -22,7 +23,11 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
     {
         get
         {
-            var list = new List<MenuItem>();
+            var list = new List<MenuItem>
+            {
+                new MenuActionItem("Reply", MiyuIcon.Type.Discord, MenuItemType.Normal, () => ReplyAction?.Invoke()) { Enabled = ReplyAction != null },
+                new MenuSeparatorItem()
+            };
 
             if (!string.IsNullOrWhiteSpace(Message.Content))
                 list.Add(new MenuActionItem("Copy Text", MiyuIcon.Type.Copy, () => clipboard.SetText(Message.Content)));
@@ -44,6 +49,7 @@ public abstract partial class ChatMessageBase : CompositeDrawable, IHasContextMe
     [Resolved]
     private Clipboard clipboard { get; set; } = null!;
 
+    public Action? ReplyAction { get; set; }
     public Action? DoubleClickAction { get; set; }
     protected virtual bool AllowDoubleClick => true;
 

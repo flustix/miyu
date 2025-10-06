@@ -1,6 +1,7 @@
 ﻿// Copyright (c) flustix <me@flux.moe>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using osu.Framework.Bindables;
 using osu.Framework.Graphics.UserInterface;
 using osu.Framework.Localisation;
 
@@ -10,6 +11,14 @@ public abstract class MiyuMenuItemBase : MenuItem
 {
     public MenuItemType Type { get; }
     public MiyuIcon.Type Icon { get; }
+
+    public BindableBool EnabledBindable { get; init; } = new(true);
+
+    public bool Enabled
+    {
+        get => EnabledBindable.Value;
+        set => EnabledBindable.Value = value;
+    }
 
     protected MiyuMenuItemBase(LocalisableString text, MiyuIcon.Type icon, MenuItemType type, Action action)
         : base(text, action)

@@ -24,42 +24,40 @@ public abstract partial class DrawableMiyuMenuItem<T> : Menu.DrawableMenuItem
         BackgroundColourHover = Catppuccin.Current.Surface2.MultiplyAlpha(0.25f);
     }
 
-    protected override Drawable CreateContent()
+    protected override Drawable CreateContent() => new GridContainer
     {
-        return new GridContainer
+        Size = new Vector2(224, 36),
+        Alpha = Item.Enabled ? 1f : .6f,
+        ColumnDimensions = new Dimension[]
         {
-            Size = new Vector2(224, 36),
-            ColumnDimensions = new Dimension[]
+            new(),
+            new(GridSizeMode.Absolute, 36)
+        },
+        Content = new[]
+        {
+            new Drawable[]
             {
-                new(),
-                new(GridSizeMode.Absolute, 36)
-            },
-            Content = new[]
-            {
-                new Drawable[]
+                new Container
                 {
-                    new Container
+                    RelativeSizeAxes = Axes.Both,
+                    Padding = new MarginPadding(8) { Right = 0 },
+                    Child = new MiyuText
                     {
-                        RelativeSizeAxes = Axes.Both,
-                        Padding = new MarginPadding(8) { Right = 0 },
-                        Child = new MiyuText
-                        {
-                            RelativeSizeAxes = Axes.X,
-                            Anchor = Anchor.CentreLeft,
-                            Origin = Anchor.CentreLeft,
-                            Text = Item.Text.Value,
-                            FontSize = 14,
-                            Weight = FontWeight.Medium,
-                            Truncate = true
-                        }
-                    },
-                    new MiyuIcon(Item.Icon, 20)
-                    {
-                        Anchor = Anchor.Centre,
-                        Origin = Anchor.Centre
+                        RelativeSizeAxes = Axes.X,
+                        Anchor = Anchor.CentreLeft,
+                        Origin = Anchor.CentreLeft,
+                        Text = Item.Text.Value,
+                        FontSize = 14,
+                        Weight = FontWeight.Medium,
+                        Truncate = true
                     }
+                },
+                new MiyuIcon(Item.Icon, 20)
+                {
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre
                 }
             }
-        };
-    }
+        }
+    };
 }

@@ -59,14 +59,12 @@ public partial class MiyuMenu : Menu
         this.ScaleTo(0.9f, 200, Easing.OutQuint).FadeOut(100);
     }
 
-    protected override DrawableMenuItem CreateDrawableMenuItem(MenuItem item)
+    protected override DrawableMenuItem CreateDrawableMenuItem(MenuItem item) => item switch
     {
-        return item switch
-        {
-            MenuActionItem action => new DrawableMenuActionItem(action),
-            _ => new BasicMenu.BasicDrawableMenuItem(item)
-        };
-    }
+        MenuActionItem action => new DrawableMenuActionItem(action),
+        MenuSeparatorItem => new DrawableMenuSeparatorItem(item),
+        _ => new BasicMenu.BasicDrawableMenuItem(item)
+    };
 
     protected override ScrollContainer<Drawable> CreateScrollContainer(Direction direction)
     {

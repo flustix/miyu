@@ -351,6 +351,7 @@ public partial class ChannelPage : Page
                 break;
         }
 
+        msg.ReplyAction = () => replyTo(msg);
         msg.DoubleClickAction = () =>
         {
             if (message.Author.ID == client.Self.ID)
