@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Miyu.UI\Miyu.UI.csproj"/>
-    <ProjectReference Include="Library\Framework\osu.Framework.Android\osu.Framework.Android.csproj"/>
+    <ProjectReference Include="..\Library\Framework\osu.Framework.Android\osu.Framework.Android.csproj"/>
     <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.30"/>
   </ItemGroup>
 
