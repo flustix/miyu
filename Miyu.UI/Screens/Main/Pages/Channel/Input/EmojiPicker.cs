@@ -3,6 +3,7 @@
 
 using Miyu.Models.Channels;
 using Miyu.Models.Guilds.Expressions;
+using Miyu.Models.Users;
 using Miyu.UI.Graphics;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
@@ -52,11 +53,32 @@ public partial class EmojiPicker : Popover
 
         if (guild is not null)
         {
-            flow.AddRange(guild.Emojis.OrderBy(x => x.Name?.ToLowerInvariant()).Select(x => new MiyuClickable
+            var hasNitro = client.Self.PremiumType > DiscordPremiumType.None;
+
+            var emojis = guild.Emojis.ToList();
+            emojis.Sort((a, b) =>
+            {
+                if (!hasNitro)
+                {
+                    var aAnim = a.Animated ?? false;
+                    var bAnim = b.Animated ?? false;
+
+                    if (!aAnim && bAnim) return -1;
+                    if (aAnim && !bAnim) return 1;
+                }
+
+                return string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+            });
+
+            flow.AddRange(emojis.Select(x => new MiyuClickable
             {
                 AutoSizeAxes = Axes.Both,
                 Action = () => OnEmojiSelected?.Invoke(x),
-                Child = new CustomEmojiDrawable(x.ID, x.Animated ?? false) { DisplayBig = true }
+                Child = new CustomEmojiDrawable(x.ID, x.Animated ?? false)
+                {
+                    Alpha = (x.Animated ?? false) && !hasNitro ? 0.25f : 1f,
+                    DisplayBig = true
+                }
             }));
         }
         else
