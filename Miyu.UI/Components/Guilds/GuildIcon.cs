@@ -91,6 +91,7 @@ public partial class GuildIcon : MiyuClickable
     {
         base.LoadComplete();
         pages.OnPageChange += pageChange;
+        updateSelected();
     }
 
     protected override void Dispose(bool isDisposing)
