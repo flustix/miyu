@@ -195,48 +195,6 @@ public partial class ChatMessage : ChatMessageBase
             color = Colour4.FromHex(hex);
         }
 
-        var flow = new FillFlowContainer
-        {
-            RelativeSizeAxes = Axes.Both,
-            Margin = new MarginPadding { Bottom = 4 },
-            Direction = FillDirection.Horizontal,
-            Children = new Drawable[]
-            {
-                new Container
-                {
-                    Size = new Vector2(16),
-                    CornerRadius = 8,
-                    Masking = true,
-                    Anchor = Anchor.CentreLeft,
-                    Origin = Anchor.CentreLeft,
-                    Margin = new MarginPadding { Right = 4 },
-                    Child = new DelayedImage($"https://cdn.discordapp.com/avatars/{message.Author.ID}/{message.Author.AvatarHash}.png?size=64")
-                    {
-                        RelativeSizeAxes = Axes.Both,
-                        AnimateAppear = s => s.FadeInFromZero(400)
-                    }
-                },
-                new MiyuText
-                {
-                    Text = $"{(mentioned ? "@" : "")}{message.Mentioned}{refName}",
-                    Weight = FontWeight.Medium,
-                    Anchor = Anchor.CentreLeft,
-                    Origin = Anchor.CentreLeft,
-                    Margin = new MarginPadding { Right = 4 },
-                    Colour = color,
-                    FontSize = 14
-                },
-                new MiyuText
-                {
-                    Text = message.Content,
-                    Anchor = Anchor.CentreLeft,
-                    Origin = Anchor.CentreLeft,
-                    Colour = Catppuccin.Current.Subtext0,
-                    FontSize = 14
-                }
-            }
-        };
-
         return new Container
         {
             RelativeSizeAxes = Axes.X,
@@ -251,7 +209,57 @@ public partial class ChatMessage : ChatMessageBase
                     Position = new Vector2(-4, 9),
                     Colour = Catppuccin.Current.Surface1
                 },
-                flow
+                new GridContainer
+                {
+                    RelativeSizeAxes = Axes.Both,
+                    Margin = new MarginPadding { Bottom = 4 },
+                    ColumnDimensions = new[]
+                    {
+                        new Dimension(GridSizeMode.AutoSize),
+                        new Dimension(GridSizeMode.AutoSize),
+                        new Dimension()
+                    },
+                    Content = new[]
+                    {
+                        new Drawable[]
+                        {
+                            new Container
+                            {
+                                Size = new Vector2(16),
+                                CornerRadius = 8,
+                                Masking = true,
+                                Anchor = Anchor.CentreLeft,
+                                Origin = Anchor.CentreLeft,
+                                Margin = new MarginPadding { Right = 4 },
+                                Child = new DelayedImage($"https://cdn.discordapp.com/avatars/{message.Author.ID}/{message.Author.AvatarHash}.png?size=64")
+                                {
+                                    RelativeSizeAxes = Axes.Both,
+                                    AnimateAppear = s => s.FadeInFromZero(400)
+                                }
+                            },
+                            new MiyuText
+                            {
+                                Text = $"{(mentioned ? "@" : "")}{message.Mentioned}{refName}",
+                                Weight = FontWeight.Medium,
+                                Anchor = Anchor.CentreLeft,
+                                Origin = Anchor.CentreLeft,
+                                Margin = new MarginPadding { Right = 4 },
+                                Colour = color,
+                                FontSize = 14
+                            },
+                            new MiyuText
+                            {
+                                RelativeSizeAxes = Axes.X,
+                                Text = message.Content,
+                                Anchor = Anchor.CentreLeft,
+                                Origin = Anchor.CentreLeft,
+                                Colour = Catppuccin.Current.Subtext0,
+                                FontSize = 14,
+                                Truncate = true
+                            }
+                        }
+                    }
+                },
             }
         };
     }
