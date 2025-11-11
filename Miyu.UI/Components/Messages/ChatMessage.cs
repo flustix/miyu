@@ -184,6 +184,8 @@ public partial class ChatMessage : ChatMessageBase
         var member = Guild?.MemberCache.Find(message.Author.ID);
         var refName = member?.Nickname ?? message.Author.DisplayName ?? message.Author.Username;
 
+        var mentioned = Message.Mentions.Any(x => x.ID == message.Author.ID);
+
         var role = member?.GetTopRoleWithColor();
         var color = Catppuccin.Current.Text;
 
@@ -216,7 +218,7 @@ public partial class ChatMessage : ChatMessageBase
                 },
                 new MiyuText
                 {
-                    Text = refName,
+                    Text = $"{(mentioned ? "@" : "")}{message.Mentioned}{refName}",
                     Weight = FontWeight.Medium,
                     Anchor = Anchor.CentreLeft,
                     Origin = Anchor.CentreLeft,
