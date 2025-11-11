@@ -23,6 +23,7 @@ public partial class GuildIcon : MiyuClickable
 
     private bool selected => pages.Current is GuildPage gp && gp.Guild.Equals(Guild);
 
+    private Container circular = null!;
     private Circle line = null!;
 
     public GuildIcon(DiscordGuild guild)
@@ -61,12 +62,12 @@ public partial class GuildIcon : MiyuClickable
         {
             line = new Circle
             {
-                Width = 8,
+                Size = new Vector2(8, 40),
                 Anchor = Anchor.CentreLeft,
                 Origin = Anchor.Centre,
                 Colour = Catppuccin.Current.Text
             },
-            new Container
+            circular = new Container
             {
                 Size = new Vector2(48),
                 CornerRadius = 24,
@@ -100,7 +101,7 @@ public partial class GuildIcon : MiyuClickable
 
     private void pageChange(Page page)
     {
-        updateLine();
+        updateSelected();
     }
 
     protected override bool OnClick(ClickEvent e)
@@ -114,9 +115,10 @@ public partial class GuildIcon : MiyuClickable
         pages.SwitchPage(new GuildPage(Guild));
     }
 
-    private void updateLine()
+    private void updateSelected()
     {
         var sel = selected;
-        line.ResizeHeightTo(sel ? 40 : 0, 300, Easing.OutQuint);
+        circular.TransformTo(nameof(circular.CornerRadius), sel ? 12f : 24f, 300, Easing.OutQuint);
+        line.ResizeHeightTo(40).ScaleTo(sel ? 1f : 0f, 300, Easing.OutQuint);
     }
 }

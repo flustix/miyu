@@ -65,12 +65,14 @@ public partial class GuildList : CompositeDrawable, IKeyBindingHandler<MiyuBind>
     {
         base.LoadComplete();
 
-        foreach (var guild in client.Guilds.Items)
+        var icons = client.Guilds.Items.Select(x =>
         {
-            var icon = new GuildIcon(guild);
+            var icon = new GuildIcon(x);
             guilds.Add(icon);
-            flow.Add(icon);
-        }
+            return icon;
+        });
+
+        flow.AddRange(icons);
     }
 
     private void cycleGuilds(int by = 0)
