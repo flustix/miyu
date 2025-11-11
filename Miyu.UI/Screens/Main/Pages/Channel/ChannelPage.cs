@@ -5,6 +5,7 @@ using Miyu.API.Requests.Channels;
 using Miyu.Attributes;
 using Miyu.Events;
 using Miyu.Events.Messages;
+using Miyu.Models;
 using Miyu.Models.Channels;
 using Miyu.Models.Channels.Messages;
 using Miyu.Models.Guilds;
@@ -17,6 +18,7 @@ using Miyu.UI.Screens.Main.Pages.Channel.Input;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Extensions;
+using osu.Framework.Extensions.EnumExtensions;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
@@ -43,7 +45,7 @@ public partial class ChannelPage : Page
     private MiyuScrollContainer scroll = null!;
     private FillFlowContainer<ChatMessageBase> flow = null!;
     private MiyuText title = null!;
-    private ChannelTextBox textBox = null!;
+    private ChannelTextBox? textBox;
 
     private const float reply_height = 38;
     private Container replyContainer = null!;
@@ -64,6 +66,16 @@ public partial class ChannelPage : Page
     [BackgroundDependencyLoader]
     private void load()
     {
+        var perms = DiscordPermissions.ViewChannel;
+
+        if (guild != null)
+        {
+            var self = guild?.MemberCache.Find(client.Self.ID);
+            if (self is null) return;
+
+            perms = Channel.PermissionsFor(self);
+        }
+
         InternalChildren = new Drawable[]
         {
             new Box
@@ -78,7 +90,7 @@ public partial class ChannelPage : Page
                 {
                     new(GridSizeMode.Absolute, 48),
                     new(),
-                    new(GridSizeMode.Absolute, 76)
+                    new(GridSizeMode.AutoSize)
                 },
                 Content = new[]
                 {
@@ -132,7 +144,9 @@ public partial class ChannelPage : Page
                     {
                         new Container
                         {
-                            RelativeSizeAxes = Axes.Both,
+                            RelativeSizeAxes = Axes.X,
+                            Height = 76,
+                            Alpha = perms.HasFlagFast(DiscordPermissions.SendMessages) ? 1f : 0,
                             Padding = new MarginPadding { Horizontal = 8, Bottom = 24 },
                             Children = new Drawable[]
                             {
@@ -214,12 +228,16 @@ public partial class ChannelPage : Page
     {
         base.LoadComplete();
         client.RegisterListeners(this);
-        textBox.OnCommit += (box, _) =>
+
+        if (textBox != null)
         {
-            sendMessage(box.Text);
-            characterCount = 0;
-            box.Text = "";
-        };
+            textBox.OnCommit += (box, _) =>
+            {
+                sendMessage(box.Text);
+                characterCount = 0;
+                box.Text = "";
+            };
+        }
 
         Channel.GetMessages().ContinueWith(task => ScheduleAfterChildren(() =>
         {
@@ -251,14 +269,17 @@ public partial class ChannelPage : Page
     {
         base.Update();
 
-        if (characterCount != textBox.Text.Length && lastTyping + 10000 < Time.Current)
+        if (textBox != null)
         {
-            _ = client.API.Execute(new StartTypingRequest(Channel.ID));
-            lastTyping = Time.Current;
-        }
+            if (characterCount != textBox.Text.Length && lastTyping + 10000 < Time.Current)
+            {
+                _ = client.API.Execute(new StartTypingRequest(Channel.ID));
+                lastTyping = Time.Current;
+            }
 
-        characterCount = textBox.Text.Length;
-        ensureTextBoxFocused();
+            characterCount = textBox.Text.Length;
+            ensureTextBoxFocused();
+        }
 
         var targetPad = 16 - replyContainer.Y;
         if (Math.Abs(targetPad - replyContainer.Padding.Bottom) < 0.01f) return;
